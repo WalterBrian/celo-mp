@@ -39,6 +39,81 @@ contract Marketplace {
 
     mapping (uint => Product) internal products;
 
+    event ProductAdded(
+        uint indexed index,
+        address owner,
+        string name,
+        string image,
+        string description,
+        string location,
+        uint price
+    );
+
+    event ProductUpdated(
+        uint indexed index,
+        string name,
+        string image,
+        string description,
+        string location,
+        uint price
+    );
+
+    event ProductRemoved(uint indexed index);
+
+    modifier onlyProductOwner(uint _index) {
+        require(_index < productsLength, "Invalid product index");
+        require(msg.sender == products[_index].owner, "You are not the product owner");
+        _;
+    }
+
+    function updateProduct(
+        uint _index,
+        string memory _name,
+        string memory _image,
+        string memory _description,
+        string memory _location,
+        uint _price
+    ) public onlyProductOwner(_index) {
+        // Validate the input parameters (similar to writeProduct function)
+        require(bytes(_name).length > 0, "Product name cannot be empty");
+        require(bytes(_name).length <= 100, "Product name is too long");
+        require(bytes(_image).length > 0, "Product image cannot be empty");
+        require(bytes(_description).length > 0, "Product description cannot be empty");
+        require(bytes(_location).length > 0, "Product location cannot be empty");
+        require(_price > 0, "Product price must be greater than zero");
+
+        // Get the product from the mapping
+        Product storage product = products[_index];
+
+        // Update the product details
+        product.name = _name;
+        product.image = _image;
+        product.description = _description;
+        product.location = _location;
+        product.price = _price;
+
+        emit ProductUpdated(
+            _index,
+            _name,
+            _image,
+            _description,
+            _location,
+            _price
+        );
+
+    }
+
+    function removeProduct(uint _index) public onlyProductOwner(_index) {
+        // Get the product from the mapping
+        Product storage product = products[_index];
+
+        // Remove the product from the mapping
+        delete products[_index];
+
+        // Decrement the productsLength to reflect the removal
+        productsLength--;
+        emit ProductRemoved(_index);
+    }
 
     //we need to adapt our writeProduct function
     //When a user adds a new product to your marketplace contract, you set _sold to the value 0
@@ -69,6 +144,16 @@ contract Marketplace {
             _sold
         );
         productsLength++; //when a new product has been stored, we count productsLength up by one
+
+        emit ProductAdded(
+            productsLength - 1,
+            msg.sender,
+            _name,
+            _image,
+            _description,
+            _location,
+            _price
+        );
         
     }
 
