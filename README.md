@@ -1,3 +1,9 @@
+# Welcome Our Market Place
+Sell, Earn and Grow together
+
+You can sell your products here. We created this platform to support our local people. Let's grow together!
+
+
 # Install
 
 ```
