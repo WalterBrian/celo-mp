@@ -52,6 +52,12 @@ contract Marketplace {
         string memory _location,
         uint _price
     ) public {
+        require(bytes(_name).length > 0, "Product name cannot be empty");
+        require(bytes(_name).length <= 100, "Product name is too long");
+        require(bytes(_image).length > 0, "Product image cannot be empty");
+        require(bytes(_description).length > 0, "Product description cannot be empty");
+        require(bytes(_location).length > 0, "Product location cannot be empty");
+        require(_price > 0, "Product price must be greater than zero");
         uint _sold = 0;
         products[productsLength]= Product (
             payable(msg.sender),
@@ -76,6 +82,7 @@ contract Marketplace {
         uint,
         uint
     ) {
+        require(_index < productsLength, "Invalid product index");
         return (
             products[_index].owner,
             products[_index].name,
@@ -89,16 +96,42 @@ contract Marketplace {
 
     //we need to create a function to buy products from our contract.
     function buyProduct(uint _index) public payable {
-        require(
-            IERC20Token(cUsdTokenAddress).transferFrom(
-                msg.sender,
-                products[_index].owner,
-                products[_index].price
-            ),
-            "Transfer failed"
-        );
-        products[_index].sold++;
+
+    require(_index < productsLength, "Invalid product index");
+
+    // Get the product from the mapping
+    Product storage product = products[_index];
+
+    // Calculate the total cost of the product
+    uint totalCost = product.price;
+
+    // Ensure the buyer sends enough funds to purchase the product
+    require(msg.value >= totalCost, "Insufficient funds");
+
+    // Attempt to transfer funds from the buyer to the product owner
+    try IERC20Token(cUsdTokenAddress).transferFrom(
+        msg.sender,
+        product.owner,
+        totalCost
+    ) returns (bool success) {
+        require(success, "Transfer failed");
+    } catch Error(string memory errorMessage) {
+        revert(errorMessage);
+    } catch {
+        revert("Unknown error occurred during transfer");
     }
+
+    // Update the product state
+    product.sold++;
+
+    // Refund excess funds back to the buyer
+    if (msg.value > totalCost) {
+        uint refundAmount = msg.value - totalCost;
+        (bool refundSuccess, ) = msg.sender.call{value: refundAmount}("");
+        require(refundSuccess, "Refund failed");
+    }
+}
+
 
     //create a public function to return the number of products stored
     function getProductsLength() public view returns (uint) {
