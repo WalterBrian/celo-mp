@@ -1,6 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT  
 
 pragma solidity >=0.7.0 <0.9.0;
+
+//nsert the interface of an ERC-20 token so your contract can interact with it.
 
 interface IERC20Token {
   function transfer(address, uint256) external returns (bool);
@@ -14,9 +16,15 @@ interface IERC20Token {
   event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-contract Marketplace {
 
+contract Marketplace {
+    
+    //in this section, we will optimise our contract
+    //we will create a state variable that keeps track of how many products are stored in our contract
+    //this variable will also help you to create the indexes for our products
     uint internal productsLength = 0;
+
+    //the address of the cUSD ERC-20 token on the Celo alfajores test network so we can interact with it
     address internal cUsdTokenAddress = 0x874069Fa1Eb16D44d622F2e0Ca25eeA172369bC1;
 
     struct Product {
@@ -31,15 +39,21 @@ contract Marketplace {
 
     mapping (uint => Product) internal products;
 
+
+    //we need to adapt our writeProduct function
+    //When a user adds a new product to your marketplace contract, you set _sold to the value 0
+    //because it tracks the number of times the product was sold
+    //this is initially always zero, and therefore you don't need a parameter.
+
     function writeProduct(
         string memory _name,
-        string memory _image,
-        string memory _description, 
-        string memory _location, 
+        string memory _image, //örnek: orange.png
+        string memory _description,
+        string memory _location,
         uint _price
     ) public {
         uint _sold = 0;
-        products[productsLength] = Product(
+        products[productsLength]= Product (
             payable(msg.sender),
             _name,
             _image,
@@ -48,42 +62,47 @@ contract Marketplace {
             _price,
             _sold
         );
-        productsLength++;
+        productsLength++; //when a new product has been stored, we count productsLength up by one
+        
     }
 
+    //we need to change the readProduct function
     function readProduct(uint _index) public view returns (
         address payable,
-        string memory, 
-        string memory, 
-        string memory, 
-        string memory, 
-        uint, 
+        string memory,
+        string memory,
+        string memory,
+        string memory,
+        uint,
         uint
     ) {
         return (
             products[_index].owner,
-            products[_index].name, 
-            products[_index].image, 
-            products[_index].description, 
-            products[_index].location, 
+            products[_index].name,
+            products[_index].image,
+            products[_index].description,
+            products[_index].location,
             products[_index].price,
             products[_index].sold
         );
     }
-    
-    function buyProduct(uint _index) public payable  {
+
+    //we need to create a function to buy products from our contract.
+    function buyProduct(uint _index) public payable {
         require(
-          IERC20Token(cUsdTokenAddress).transferFrom(
-            msg.sender,
-            products[_index].owner,
-            products[_index].price
-          ),
-          "Transfer failed."
+            IERC20Token(cUsdTokenAddress).transferFrom(
+                msg.sender,
+                products[_index].owner,
+                products[_index].price
+            ),
+            "Transfer failed"
         );
         products[_index].sold++;
     }
-    
+
+    //create a public function to return the number of products stored
     function getProductsLength() public view returns (uint) {
-        return (productsLength);
+        return productsLength;
     }
+
 }
