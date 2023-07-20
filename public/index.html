@@ -124,7 +124,25 @@
 <!--/Modal-->
 
 
-    
+        <script>
+        // JavaScript code to enable/disable the submit button based on input validation
+        document.addEventListener('input', function () {
+            const name = document.getElementById('newProductName').value;
+            const image = document.getElementById('newImgUrl').value;
+            const description = document.getElementById('newProductDescription').value;
+            const location = document.getElementById('newLocation').value;
+            const price = document.getElementById('newPrice').value;
+
+            const submitButton = document.getElementById('newProductBtn');
+
+            // Enable the submit button only if all fields are non-empty
+            if (name && image && description && location && price) {
+                submitButton.removeAttribute('disabled');
+            } else {
+                submitButton.setAttribute('disabled', 'disabled');
+            }
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0"
